@@ -31,6 +31,12 @@ class KeplerOrbit {
     let c = (l*l)/(g*u);
     let a = 1/rmin - 1/c;
     let e = a*c;
+    console.log("Eccentricity: " + e);
+    console.log("A: " + a);
+    console.log("c: " + c);
+    console.log("Gamma: " + g);
+    console.log("Angular momentum: " + l);
+    console.log("Reduced mass: " + u);
 
     // Save for later use
     this.u = u;
@@ -84,7 +90,7 @@ let controls = new OrbitControls(camera, renderer.domElement);
 let stats = Stats();
 
 let phi = 0.0;
-let orbit = new KeplerOrbit(1000, 1, 1, 33);
+let orbit = new KeplerOrbit(1000, 1, 1, 31.70625);
 
 init();
 animate();
