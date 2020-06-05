@@ -27,7 +27,7 @@ class SceneManager {
 
     private setupRenderer(): THREE.WebGLRenderer {
         let options = { canvas: this.canvas, antialias: true, alpha: true }
-        const renderer = new THREE.WebGLRenderer(options); 
+        const renderer = new THREE.WebGLRenderer(options);
         const DPR = (window.devicePixelRatio) ? window.devicePixelRatio : 1;
         renderer.setPixelRatio(DPR);
         renderer.setSize(this.width, this.height);
@@ -38,8 +38,8 @@ class SceneManager {
         const aspectRatio = this.width / this.height;
         const fieldOfView = 45;
         const nearPlane = 0.1;
-        const farPlane = 10000; 
-        const camera = new THREE.PerspectiveCamera(fieldOfView, 
+        const farPlane = 10000;
+        const camera = new THREE.PerspectiveCamera(fieldOfView,
             aspectRatio, nearPlane, farPlane);
         return camera;
     }
@@ -49,8 +49,8 @@ class SceneManager {
     }
 
     public onWindowResize(): void {
-        //this.canvas.style.width = "100%";
-        //this.canvas.style.height = "100%";
+        this.canvas.style.width = "100%";
+        this.canvas.style.height = "100%";
         this.width = this.canvas.clientWidth
         this.height = this.canvas.clientHeight
         this.camera.aspect = this.width / this.height;

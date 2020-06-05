@@ -44,8 +44,17 @@ class KeplerOrbit {
         this.e = e;
     }
 
+    phase(time: number): number {
+        let e2 = this.e**2;
+        let a = 0.5*(e2)*time;
+        let b = 2.0*this.e*Math.sin(time);
+        let c = 0.25*e2*Math.sin(2.0*time);
+        let phi = (a + time + b + c)/(this.u*this.l);
+        return phi;
+    }
+
     distance(phi: number): number {
-        return (this.c / (1 + this.e * Math.cos(phi)));
+        return(this.c / (1 + this.e * Math.cos(phi)));
     }
 
     public trajectory(segments: number) {

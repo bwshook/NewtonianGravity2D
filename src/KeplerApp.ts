@@ -10,14 +10,14 @@ import { KeplerOrbit } from "./KeplerOrbit";
 class KeplerApp extends SceneManager {
     stats: Stats;
     orbit: KeplerOrbit;
-    phi: number;
+    time: number;
     body1: THREE.Mesh;
     body2: THREE.Mesh;
 
     constructor(container: HTMLDivElement, canvas: HTMLCanvasElement) {
         super(canvas);
 
-        this.phi = 0; // Orbital phase (radians)
+        this.time = 0; // Orbital phase (radians)
         this.orbit = new KeplerOrbit(1, 1, 1, 1);
 
         // Add objects
@@ -28,10 +28,10 @@ class KeplerApp extends SceneManager {
         let grid = new THREE.GridHelper(10, 10);
 
         // Add orbit controls
-        let controls = new OrbitControls(this.camera, 
+        let controls = new OrbitControls(this.camera,
             this.renderer.domElement);
 
-        // Add stats 
+        // Add stats
         this.stats = Stats();
         container.appendChild(this.stats.dom);
 
@@ -46,11 +46,12 @@ class KeplerApp extends SceneManager {
 
     update() {
         const elapsedTime = this.clock.getElapsedTime();
-        let r = this.orbit.distance(this.phi);
-        let x = r*Math.cos(this.phi);
-        let y = r*Math.sin(this.phi);
+        let phi = this.orbit.phase(this.time);
+        let r = this.orbit.distance(phi);
+        let x = r*Math.cos(phi);
+        let y = r*Math.sin(phi);
         this.body2.position.set(x, 0, y);
-        this.phi += 0.01;
+        this.time += 0.01;
         this.stats.update();
         super.update()
     }
