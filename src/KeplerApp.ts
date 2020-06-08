@@ -46,11 +46,8 @@ class KeplerApp extends SceneManager {
 
     update() {
         const elapsedTime = this.clock.getElapsedTime();
-        let phi = this.orbit.phase(this.time);
-        let r = this.orbit.distance(phi);
-        let x = r*Math.cos(phi);
-        let y = r*Math.sin(phi);
-        this.body2.position.set(x, 0, y);
+        let pos = this.orbit.position(this.time);
+        this.body2.position.set(pos[0], 0, pos[1]);
         this.time += 0.01;
         this.stats.update();
         super.update()
