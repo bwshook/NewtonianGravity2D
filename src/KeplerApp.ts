@@ -1,5 +1,6 @@
 // Third-Party modules
 import * as THREE from "three";
+import { Vector3 } from "three";
 import Stats from "three/examples/jsm/libs/stats.module";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
@@ -17,8 +18,9 @@ class KeplerApp extends SceneManager {
     constructor(container: HTMLDivElement, canvas: HTMLCanvasElement) {
         super(canvas);
 
-        this.time = 0; // Orbital phase (radians)
-        this.orbit = new KeplerOrbit(1, 1, 1, 1);
+        let ri = new Vector3(1, 0, 0);
+        let vi = new Vector3(0, 0, 0.5);
+        this.orbit = new KeplerOrbit(1, 1, 1, ri, vi);
 
         // Add objects
         let geometry = new THREE.SphereGeometry(0.2, 16, 16);
@@ -41,14 +43,13 @@ class KeplerApp extends SceneManager {
         this.scene.add(this.body1);
         this.scene.add(this.body2);
         this.scene.add(grid);
-        this.scene.add(this.orbit.trajectory(128));
+        //this.scene.add(this.orbit.trajectory(128));
     }
 
     update() {
-        const elapsedTime = this.clock.getElapsedTime();
-        let pos = this.orbit.position(this.time);
-        this.body2.position.set(pos[0], 0, pos[1]);
-        this.time += 0.01;
+        let elapsedTime = this.clock.getElapsedTime();
+        this.orbit.update(0.01);
+        this.body2.position.copy(this.orbit.r);
         this.stats.update();
         super.update()
     }

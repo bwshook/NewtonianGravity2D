@@ -1,10 +1,11 @@
 import * as THREE from "three";
+import { Vector3 } from "three";
 
-function twobody(mu: number, tau: number, 
-   ri: THREE.Vector3, vi: THREE.Vector3) {
+function twobody(mu: number, tau: number,
+   ri: Vector3, vi: Vector3): [Vector3, Vector3] {
    // solve the two body initial value problem
    // Goodyear's method
-   //  
+   //
    // input
    //  mu  = gravitational constant (km**3/sec**2)
    //  tau = propagation time interval (seconds)
@@ -104,8 +105,8 @@ function twobody(mu: number, tau: number,
    let gd = gdm1 + 1;
 
    // compute final state vector
-   let rf = new THREE.Vector3()
-   let vf = new THREE.Vector3()
+   let rf = new Vector3()
+   let vf = new Vector3()
    for (let i = 0; i < 3; i++) {
       rf.setComponent(i, ff*ri.getComponent(i) + gg*vi.getComponent(i));
       vf.setComponent(i, fd*ri.getComponent(i) + gd*vi.getComponent(i));
@@ -116,8 +117,8 @@ function twobody(mu: number, tau: number,
 // Danby Stumpf Two-Body oribital calculation
 // Adapted from David Eagle's MATLAB two-body code (source below)
 // https://www.mathworks.com/matlabcentral/fileexchange/48723-matlab-functions-for-two-body-orbit-propagation?focused=3853951&tab=function
-function danbyStumpf(mu: number, tau: number, 
-   ri: THREE.Vector3, vi: THREE.Vector3) {
+function danbyStumpf(mu: number, tau: number,
+   ri: Vector3, vi: Vector3) {
    // solve the two body initial value problem
    // input
    //  mu  = Reduced mass * Gravitational constant (kilometer^3/second^2)
@@ -243,15 +244,15 @@ function danbyStumpf(mu: number, tau: number,
    let gdot = 1 - (mu / fp) * c2;
 
    // compute final state vector
-   let rf = new THREE.Vector3()
-   let vf = new THREE.Vector3()
+   let rf = new Vector3()
+   let vf = new Vector3()
    for (let i = 0; i < 3; i++) {
       rf.setComponent(i, f * ri.getComponent(i) + g * vi.getComponent(i));
       vf.setComponent(i, fdot * ri.getComponent(i) + gdot * vi.getComponent(i));
    }
    return [rf, vf];
 }
- 
+
 function stumpff (x: number): [number, number, number, number] {
    // Stumpff functions
    // input
