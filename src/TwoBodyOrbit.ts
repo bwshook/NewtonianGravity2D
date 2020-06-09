@@ -3,6 +3,9 @@ import { Vector3 } from "three";
 
 function twobody(mu: number, tau: number,
    ri: Vector3, vi: Vector3): [Vector3, Vector3] {
+   // Adapted from David Eagle's MATLAB two-body code (see link below)
+   // https://www.mathworks.com/matlabcentral/fileexchange/48723-matlab-functions-for-two-body-orbit-propagation?focused=3853951&tab=function
+
    // solve the two body initial value problem
    // Goodyear's method
    //
@@ -14,8 +17,6 @@ function twobody(mu: number, tau: number,
    // output
    //  rf = final eci position vector (kilometers)
    //  vf = final eci velocity vector (km/sec)
-   // Adapted from David Eagle's MATLAB two-body code (see link below)
-   // https://www.mathworks.com/matlabcentral/fileexchange/48723-matlab-functions-for-two-body-orbit-propagation?focused=3853951&tab=function
 
    let a0 = 0.025;
    let b0 = a0 / 42;
@@ -33,6 +34,7 @@ function twobody(mu: number, tau: number,
    let n0 = m0 / 182;
    let o0 = n0 / 240;
    let p0 = o0 / 306;
+
    // convergence criterion
    let tol = 1.0e-8;
 

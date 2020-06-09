@@ -5,15 +5,18 @@ import { Vector3 } from "three";
 
 class KeplerOrbit {
     // Initial parameters
-    m1: number; // Mass body 1 (at origin)
-    m2: number; // Mass body 2
+    m1: number; // mass body 1 (at origin)
+    m2: number; // mass body 2 (at r)
     mu: number;
     mug: number;
-    G: number; // Gravitation constant
+    G: number; // gravitation constant
     ri: Vector3; // initial position of body 2
     vi: Vector3; // initial velocity of body 2
     r: Vector3; // position of body 2
     v: Vector3; // velocity of body 2
+
+    c: number;
+    eps: number;
 
     // Internal parameters
     time: number;
@@ -24,11 +27,17 @@ class KeplerOrbit {
         this.G = G;
         this.ri = ri;
         this.vi = vi;
+        this.r = ri;
+        this.v = vi;
 
         this.time = 0.0;
 
         this.mu = (m1 * m2) / (m1 + m2)
         this.mug = this.mu * this.G;
+
+        this.c = 0;
+        this.eps = 0;
+        this.initParams();
 
         // Earth gravitational constant (km^3/s^2)
         let earthMu = 398600.4415;
@@ -57,6 +66,31 @@ class KeplerOrbit {
         console.log(`Final Vel.: ${vf.x} ${vf.y} ${vf.z} ${vf.length()}`);
     }
 
+    private initParams() {
+        let riMag = this.ri.length();
+        let viMag = this.vi.length();
+
+        let rhat = this.ri.clone();
+        rhat.normalize();
+
+        let lv = new Vector3();
+        lv.crossVectors(this.ri, this.vi);
+        let l = lv.length()*this.mu;
+        let g = this.G * this.m1 * this.m2;
+        this.c = (l * l) / (g * this.mu);
+        let A = (1/riMag - 1/this.c)/rhat.x
+        this.eps = A * this.c;
+
+        console.log("Reduced mass: " + this.mu);
+        console.log("Eccentricity: " + this.eps);
+        console.log("c: " + this.c);
+        console.log("A: " + A);
+        console.log("Gamma: " + g);
+        console.log("Angular momentum: " + l);
+        //this.c = 1;
+        //this.eps = 0;
+    }
+
     public update(deltaTime: number) {
         this.time += deltaTime;
         let nextState = twobody(this.mug, this.time, this.ri, this.vi);
@@ -65,32 +99,11 @@ class KeplerOrbit {
     }
 
     public trajectory(segments: number) {
-        let m1 = this.m1;
-        let m2 = this.m2;
-        let ri = this.ri.length();
-        let vi = this.vi.length();
-        let rhatx = this.ri.x/ri;
-
-        let u = (m1 * m2) / (m1 + m2);
-        let l = ri * u * vi;
-        let g = this.G * m1 * m2;
-        let c = (l * l) / (g * u);
-        let A = (1 / ri - 1 / c)/rhatx;
-        let e = A * c;
-        let a = c / (1 - e**2);
-        console.log("Eccentricity: " + e);
-        console.log("A: " + A);
-        console.log("a?: " + a);
-        console.log("c: " + c);
-        console.log("Gamma: " + g);
-        console.log("Angular momentum: " + l);
-        console.log("Reduced mass: " + u);
-
         let points: Array<number> = [];
         let deltaPhi = 2.0 * Math.PI / segments
         for (let i = 0; i <= segments; i++) {
             let phi = deltaPhi * (i % segments);
-            let r = c / (1 + e * Math.cos(phi));
+            let r = this.c / (1 + this.eps * Math.cos(phi));
             let x = r * Math.cos(phi);
             let y = r * Math.sin(phi);
             points.push(x, 0.0, y);

@@ -11,27 +11,40 @@ import { KeplerOrbit } from "./KeplerOrbit";
 class KeplerApp extends SceneManager {
     stats: Stats;
     orbit: KeplerOrbit;
-    time: number;
     body1: THREE.Mesh;
     body2: THREE.Mesh;
+    velVector: THREE.ArrowHelper;
 
     constructor(container: HTMLDivElement, canvas: HTMLCanvasElement) {
         super(canvas);
 
-        let ri = new Vector3(1, 0, 0);
-        let vi = new Vector3(0, 0, 0.5);
+        let ri = new Vector3(-1, 0, 0);
+        let vi = new Vector3(0, 0, Math.sqrt(2)/2.0);
         this.orbit = new KeplerOrbit(1, 1, 1, ri, vi);
 
         // Add objects
         let geometry = new THREE.SphereGeometry(0.2, 16, 16);
         let material = new THREE.MeshNormalMaterial();
+
         this.body1 = new THREE.Mesh(geometry, material);
+        this.scene.add(this.body1);
+
         this.body2 = new THREE.Mesh(geometry, material);
+        this.scene.add(this.body2);
+
         let grid = new THREE.GridHelper(10, 10);
+        this.scene.add(grid);
+
+        // Velocity vector
+        let dir = new Vector3(1, 0, 0);
+        let origin = new Vector3(0, 0, 0);
+        this.velVector = new THREE.ArrowHelper(dir, origin);
+        this.scene.add(this.velVector);
+
+        this.scene.add(this.orbit.trajectory(128));
 
         // Add orbit controls
-        let controls = new OrbitControls(this.camera,
-            this.renderer.domElement);
+        let controls = new OrbitControls(this.camera, this.renderer.domElement);
 
         // Add stats
         this.stats = Stats();
@@ -40,16 +53,21 @@ class KeplerApp extends SceneManager {
         this.camera.position.set(10, 10, 10);
         controls.update();
 
-        this.scene.add(this.body1);
-        this.scene.add(this.body2);
-        this.scene.add(grid);
-        //this.scene.add(this.orbit.trajectory(128));
     }
 
     update() {
-        let elapsedTime = this.clock.getElapsedTime();
-        this.orbit.update(0.01);
+        let dTime = this.clock.getDelta();
+        this.orbit.update(dTime);
+
+        // Update body2 position
         this.body2.position.copy(this.orbit.r);
+
+        // Update velocity vector
+        let vel = this.orbit.v.clone();
+        this.velVector.setLength(vel.length());
+        this.velVector.setDirection(vel.normalize());
+        this.velVector.position.copy(this.orbit.r);
+
         this.stats.update();
         super.update()
     }
