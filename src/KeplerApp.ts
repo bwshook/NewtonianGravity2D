@@ -13,14 +13,15 @@ class KeplerApp extends SceneManager {
     orbit: KeplerOrbit;
     body1: THREE.Mesh;
     body2: THREE.Mesh;
+    body2b: THREE.Mesh;
     velVector: THREE.ArrowHelper;
 
     constructor(container: HTMLDivElement, canvas: HTMLCanvasElement) {
         super(canvas);
 
-        let ri = new Vector3(-1, 0, 0);
-        let vi = new Vector3(0, 0, Math.sqrt(2)/2.0);
-        this.orbit = new KeplerOrbit(1, 1, 1, ri, vi);
+        let ri = new Vector3(1, 0, 0);
+        let vi = new Vector3(0, 0, 20)
+        this.orbit = new KeplerOrbit(1000, 1, 1, ri, vi);
 
         // Add objects
         let geometry = new THREE.SphereGeometry(0.2, 16, 16);
@@ -31,6 +32,8 @@ class KeplerApp extends SceneManager {
 
         this.body2 = new THREE.Mesh(geometry, material);
         this.scene.add(this.body2);
+        this.body2b = this.body2.clone();
+        this.scene.add(this.body2b);
 
         let grid = new THREE.GridHelper(10, 10);
         this.scene.add(grid);
@@ -57,10 +60,12 @@ class KeplerApp extends SceneManager {
 
     update() {
         let dTime = this.clock.getDelta();
-        this.orbit.update(dTime);
+        this.orbit.update_twobody(dTime*0.005);
+        this.orbit.update(dTime*0.005);
 
         // Update body2 position
         this.body2.position.copy(this.orbit.r);
+        this.body2b.position.copy(this.orbit.r2b);
 
         // Update velocity vector
         let vel = this.orbit.v.clone();

@@ -15,6 +15,9 @@ class KeplerOrbit {
     r: Vector3; // position of body 2
     v: Vector3; // velocity of body 2
 
+    r2b: Vector3; // position of body 2
+    v2b: Vector3; // velocity of body 2
+
     c: number;
     eps: number;
 
@@ -30,9 +33,12 @@ class KeplerOrbit {
         this.r = ri;
         this.v = vi;
 
+        this.r2b = ri;
+        this.v2b = vi;
+
         this.time = 0.0;
 
-        this.mu = (m1 * m2) / (m1 + m2)
+        this.mu = (m1 * m2) / (m1 + m2);
         this.mug = this.mu * this.G;
 
         this.c = 0;
@@ -87,15 +93,29 @@ class KeplerOrbit {
         console.log("A: " + A);
         console.log("Gamma: " + g);
         console.log("Angular momentum: " + l);
-        //this.c = 1;
-        //this.eps = 0;
     }
 
     public update(deltaTime: number) {
+        // Calculate acceleration on body2
+        // F = m*a -> a = F/m -> a = (G*m1*m2)/(m2*r^2)
+        let acc = (this.G*this.m1)/this.r.lengthSq();
+        // Make dv vector (towards body1)
+        let dv = this.r.clone();
+        dv.normalize();
+        dv.multiplyScalar(-acc*deltaTime);
+        // Add to current velocity vector
+        this.v.add(dv);
+        // Add to current position vector
+        let dr = this.v.clone();
+        dr.multiplyScalar(deltaTime);
+        this.r.add(dr);
+    }
+
+    public update_twobody(deltaTime: number) {
         this.time += deltaTime;
-        let nextState = twobody(this.mug, this.time, this.ri, this.vi);
-        this.r = nextState[0];
-        this.v = nextState[1];
+        let nextState = twobody(this.m1*this.G, deltaTime, this.r2b, this.v2b);
+        this.r2b = nextState[0];
+        this.v2b = nextState[1];
     }
 
     public trajectory(segments: number) {
