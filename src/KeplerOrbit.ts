@@ -20,6 +20,13 @@ class KeplerOrbit {
 
     c: number;
     eps: number;
+    initEnergy: number;
+
+    // Yoshida Integ. Constants
+    w0 = -Math.cbrt(2.0)/(2.0 - Math.cbrt(2.0));
+    w1 = 1.0/(2.0 - Math.cbrt(2.0));
+    c1 = this.w1/2.0;
+    c2 = (this.w0 + this.w1)/2.0;
 
     // Internal parameters
     time: number;
@@ -44,6 +51,7 @@ class KeplerOrbit {
         this.c = 0;
         this.eps = 0;
         this.initParams();
+        this.initEnergy = this.lagrangianEnergy();
 
         // Earth gravitational constant (km^3/s^2)
         let earthMu = 398600.4415;
@@ -70,6 +78,10 @@ class KeplerOrbit {
         console.log(`Init. Vel.: ${vei.x} ${vei.y} ${vei.z} ${vei.length()}`);
         console.log(`Final Pos.: ${rf.x} ${rf.y} ${rf.z} ${rf.length()}`);
         console.log(`Final Vel.: ${vf.x} ${vf.y} ${vf.z} ${vf.length()}`);
+
+        // Yoshida coeffs
+        // console.log(`w0:${this.w0} w1:${this.w1} c1:${this.c1} c2:${this.c2} c3:${this.c2} c4:${this.c1}`);
+        // console.log(`d1:${this.w1} d2:${this.w0} d3:${this.w1}`);
     }
 
     private initParams() {
@@ -95,20 +107,121 @@ class KeplerOrbit {
         console.log("Angular momentum: " + l);
     }
 
+    public lagrangianEnergy(): number {
+        // L = T - U
+        // T: Sum of kinetic energy
+        // T = Sum(0.5*m[n]*v[n]**2, n=1:N)
+        // U: Sum of potential energy
+        let T = 0.5*this.m2*this.v.lengthSq();
+        let U = (this.G*this.m1*this.m2)/this.r.length();
+        return T - U;
+    }
+
+    public lagrangianEnergy2(): number {
+        // L = T - U
+        // T: Sum of kinetic energy
+        // T = Sum(0.5*m[n]*v[n]**2, n=1:N)
+        // U: Sum of potential energy
+        let T = 0.5*this.m2*this.v2b.lengthSq();
+        let U = (this.G*this.m1*this.m2)/this.r2b.length();
+        return T - U;
+    }
+
     public update(deltaTime: number) {
+        let ticks = 10;
+        let dt = deltaTime/ticks;
+        for(let i = 0; i < ticks; i++) 
+            this.verlet_update(dt);
+        // this.yoshida_update(deltaTime);
+        //this.verlet_update(deltaTime);
+    }
+
+    private simple_update(deltaTime: number) {
         // Calculate acceleration on body2
         // F = m*a -> a = F/m -> a = (G*m1*m2)/(m2*r^2)
-        let acc = (this.G*this.m1)/this.r.lengthSq();
-        // Make dv vector (towards body1)
-        let dv = this.r.clone();
-        dv.normalize();
-        dv.multiplyScalar(-acc*deltaTime);
+        let dv = this.acceleration(this.r);
+        dv.multiplyScalar(deltaTime);
         // Add to current velocity vector
         this.v.add(dv);
         // Add to current position vector
         let dr = this.v.clone();
         dr.multiplyScalar(deltaTime);
         this.r.add(dr);
+    }
+
+    private verlet_update(deltaTime: number) {
+        let a = this.acceleration(this.r);
+        let dt = deltaTime;
+        let dt2 = deltaTime*deltaTime;
+        let dr_v = this.v.clone();
+        dr_v.multiplyScalar(dt);
+        let dr_a = a.clone();
+        dr_a.multiplyScalar(0.5*dt2);
+        let r_t_dt = this.r.clone();
+        r_t_dt.add(dr_v);
+        r_t_dt.add(dr_a);
+
+        let v_t_dt_2 = this.v.clone();
+        let dv = a.clone();
+        dv.multiplyScalar(0.5*dt);
+        v_t_dt_2.add(dv);
+
+        let v_t_dt = v_t_dt_2.clone();
+        let dv_t_dt = this.acceleration(r_t_dt);
+        dv_t_dt.multiplyScalar(0.5*deltaTime);
+        v_t_dt.add(dv_t_dt);
+
+        this.r = r_t_dt;
+        this.v = v_t_dt;
+    }
+
+    private acceleration(r: Vector3): Vector3 {
+        let rhat = r.clone();
+        rhat.normalize();
+        // Calculate acceleration on body2
+        // F = m*a -> a = F/m -> a = (G*m1*m2)/(m2*r^2)
+        let a = (this.G*this.m1)/r.lengthSq();
+        return rhat.multiplyScalar(-a);
+    }
+
+    private yoshida_update(deltaTime: number) {
+        let x1d = this.v.clone();
+        x1d.multiplyScalar(this.c1*deltaTime);
+        let x1 = this.r.clone();
+        x1.add(x1d);
+
+        let v1d = this.acceleration(x1);
+        v1d.multiplyScalar(this.w1*deltaTime);
+        let v1 = this.v.clone();
+        v1.add(v1d);
+
+        let x2d = v1d.clone();
+        x2d.multiplyScalar(this.c2*deltaTime);
+        let x2 = x1.clone();
+        x2.add(x2d);
+
+        let v2d = this.acceleration(x2);
+        v2d.multiplyScalar(this.w0*deltaTime);
+        let v2 = v1.clone();
+        v2.add(v2d);
+
+        let x3d = v2d.clone();
+        x3d.multiplyScalar(this.c2*deltaTime);
+        let x3 = x2.clone();
+        x3.add(x3d);
+
+        let v3d = this.acceleration(x3);
+        v3d.multiplyScalar(this.w1*deltaTime);
+        let v3 = v2.clone();
+        v3.add(v3d);
+
+        let x4d = v3d.clone();
+        x4d.multiplyScalar(this.c1*deltaTime);
+        let x4 = x3.clone();
+        x4.add(x4d);
+
+        this.r.copy(x4);
+        this.v.copy(v3);
     }
 
     public update_twobody(deltaTime: number) {

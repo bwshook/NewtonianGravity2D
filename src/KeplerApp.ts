@@ -15,12 +15,14 @@ class KeplerApp extends SceneManager {
     body2: THREE.Mesh;
     body2b: THREE.Mesh;
     velVector: THREE.ArrowHelper;
+    infoText: Text;
+    energyErrorMax = 0;
 
     constructor(container: HTMLDivElement, canvas: HTMLCanvasElement) {
         super(canvas);
 
-        let ri = new Vector3(1, 0, 0);
-        let vi = new Vector3(0, 0, 20)
+        let ri = new Vector3(5, 0, 0);
+        let vi = new Vector3(0, 0, 10)
         this.orbit = new KeplerOrbit(1000, 1, 1, ri, vi);
 
         // Add objects
@@ -53,15 +55,29 @@ class KeplerApp extends SceneManager {
         this.stats = Stats();
         container.appendChild(this.stats.dom);
 
+        // Make info div
+        let  infoDiv = document.createElement("div");
+        this.infoText = document.createTextNode("Hi there and greetings!");
+        infoDiv.style.color = "white";
+        infoDiv.style.position = "fixed";
+        infoDiv.style.top = "0px";
+        infoDiv.style.right = "10%";
+        infoDiv.appendChild(this.infoText);
+        container.appendChild(infoDiv);
+
         this.camera.position.set(10, 10, 10);
         controls.update();
-
     }
 
     update() {
         let dTime = this.clock.getDelta();
-        this.orbit.update_twobody(dTime*0.005);
-        this.orbit.update(dTime*0.005);
+        this.orbit.update_twobody(dTime*0.05);
+        this.orbit.update(dTime*0.05);
+        let energy = this.orbit.initEnergy;
+        let energyError = Math.abs(energy - this.orbit.lagrangianEnergy());
+        if(energyError > this.energyErrorMax)
+            this.energyErrorMax = energyError
+        this.infoText.data = `Verlet Energy Error: ${this.energyErrorMax.toFixed(5)}`;
 
         // Update body2 position
         this.body2.position.copy(this.orbit.r);
