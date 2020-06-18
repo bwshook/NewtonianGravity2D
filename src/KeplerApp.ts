@@ -72,12 +72,12 @@ class KeplerApp extends SceneManager {
     update() {
         let dTime = this.clock.getDelta();
         this.orbit.update_twobody(dTime*0.05);
-        this.orbit.update(dTime*0.05);
+        let ticks = this.orbit.update(dTime*0.05);
         let energy = this.orbit.initEnergy;
         let energyError = Math.abs(energy - this.orbit.lagrangianEnergy());
         if(energyError > this.energyErrorMax)
             this.energyErrorMax = energyError
-        this.infoText.data = `Verlet Energy Error: ${this.energyErrorMax.toFixed(5)}`;
+        this.infoText.data = `Verlet Energy Error: ${this.energyErrorMax.toFixed(10)}\nTicks:${ticks}`;
 
         // Update body2 position
         this.body2.position.copy(this.orbit.r);

@@ -128,12 +128,22 @@ class KeplerOrbit {
     }
 
     public update(deltaTime: number) {
-        let ticks = 10;
-        let dt = deltaTime/ticks;
-        for(let i = 0; i < ticks; i++) 
-            this.verlet_update(dt);
-        // this.yoshida_update(deltaTime);
-        //this.verlet_update(deltaTime);
+        let rtemp = this.r.clone();
+        let vtemp = this.v.clone();
+        let error = 1;
+        let ticks = Math.floor(1.1*this.v.lengthSq());
+        let tol = 1e-8;
+        do {
+            this.r.copy(rtemp);
+            this.v.copy(vtemp);
+            let dt = deltaTime/ticks;
+            for(let i = 0; i < ticks; i++) {
+                this.verlet_update(dt);
+            }
+            ticks++;
+            error = Math.abs(this.lagrangianEnergy() - this.initEnergy);
+        } while(error > tol && ticks < 200)
+        return ticks-1;
     }
 
     private simple_update(deltaTime: number) {
